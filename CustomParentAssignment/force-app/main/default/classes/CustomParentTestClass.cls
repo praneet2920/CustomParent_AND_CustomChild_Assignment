@@ -1,0 +1,54 @@
+@isTest
+public class CustomParentTestClass {
+    
+   
+    
+    @isTest
+    public static void testCustomParentAfterInsert(){
+        CustomParent__c cp = new CustomParent__c();
+        cp.Status__c = 'pending';
+        test.startTest();
+        insert cp;
+        
+        CustomChild__c cc = new CustomChild__c();
+        cc.CustomChildParent__c = cp.Id;
+       
+        insert cc;     
+        test.stopTest();
+    }
+    
+    @isTest
+    public static void testCustomParentAfterUpdate(){
+        CustomParent__c cp = new CustomParent__c();
+        cp.Status__c = 'pending';
+        insert cp;
+        
+        CustomChild__c cc = new CustomChild__c();
+        cc.CustomChildParent__c = cp.Id;
+        insert cc; 
+        cp.Status__c = 'Withdrawn';
+        test.startTest();
+        update cp;
+       
+        if(cp.Status__c == 'active'){
+            cc.Status__c = 'active';
+        cc.FromDate__c = system.today();
+        cc.ToDate__c = cc.FromDate__c.addYears(3);
+        update cc;
+        } else if(cp.Status__c=='completed'){
+            cc.Status__c='active';
+            update cc;
+        }
+        else if(cp.Status__c == 'Draft' || cp.Status__c=='Pending'){
+            cc.Status__c = 'pending';
+            update cc;
+        }
+        else if(cp.Status__c == 'Withdrawn' || cp.Status__c == 'Ready-to-withdraw'){
+            cc.Status__c = 'withdrawn';
+            update cc;
+        }
+        test.stopTest();
+            
+    }
+    
+}
