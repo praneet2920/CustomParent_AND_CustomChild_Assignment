@@ -1,0 +1,96 @@
+public class CustomParentTriggerHandler {
+    
+    public static void customParentAfterInsert(List<CustomParent__c> customParentList){
+        List<CustomChild__c> customChildList = new List<CustomChild__c>();
+        for(CustomParent__c cp : customParentList){
+            CustomChild__c cc = new CustomChild__c();
+            cc.Status__c = 'pending';
+            cc.CustomChildParent__c = cp.Id;
+            customChildList.add(cc);
+        }
+        insert customChildList;
+    }
+    
+    public static void customParentBeforeInsert(List<CustomParent__c> customParentList){
+        for(CustomParent__c cp : customParentList){
+            cp.Status__c = 'pending';
+        }
+    }
+    
+    public static void customParentAfterUpdate(List<CustomParent__c> customParentNewList,Map<Id,CustomParent__c> customParentOldMap){
+        Set<Id> customParentUpdatedActive = new Set<Id>();
+        Set<Id> customParentUpdatedCompleted = new Set<Id>();
+        Set<Id> customParentUpdatedPendingOrDraft = new Set<Id>();
+        Set<Id> customParentUpdatedWithdrawnOrReadytoWithdraw = new Set<Id>();
+        List<CustomChild__c> customChildUpdateList = new List<CustomChild__c>();
+        for(CustomParent__c cp : customParentNewList){
+            CustomParent__c cpOld = CustomParentOldMap.get(cp.Id);
+            if(cp.Status__c != cpOld.Status__c){
+                if(cp.Status__c=='Active' ){
+                    
+                    customParentUpdatedActive.add(cp.Id);
+                    
+                    system.debug(customParentUpdatedActive);
+                }else if(cp.Status__c=='Pending' || cp.Status__c=='Draft'){
+                    customParentUpdatedPendingOrDraft.add(cp.Id);
+                    system.debug(customParentUpdatedPendingOrDraft);
+                }else if(cp.Status__c=='Withdrawn' || cp.Status__c=='Ready-to-withdraw'){
+                    customParentUpdatedWithdrawnOrReadytoWithdraw.add(cp.Id);
+                    system.debug(customParentUpdatedWithdrawnOrReadytoWithdraw);
+                }else if(cp.Status__c=='Completed'){
+                    customParentUpdatedCompleted.add(cp.Id);
+                }
+            }
+        }
+        if(!customParentUpdatedActive.isEmpty()){
+            
+            List<CustomParent__c> cpList = [ Select id,status__c,(select status__c from CustomChilds__r) from CustomParent__c where id in: customParentUpdatedActive ]; 
+            for(CustomParent__c cp : cpList){
+                CustomChild__c cc = cp.CustomChilds__r[0];
+                system.debug(cc);
+                cc.Status__c = 'active';
+                cc.FromDate__c = system.today();
+                cc.ToDate__c = cc.FromDate__c.addYears(3);
+                customChildUpdateList.add(cc);
+                
+            }
+            
+        }
+         if(!customParentUpdatedCompleted.isEmpty()){
+            
+            List<CustomParent__c> cpList = [ Select id,status__c,(select status__c from CustomChilds__r) from CustomParent__c where id in: customParentUpdatedCompleted ]; 
+            for(CustomParent__c cp : cpList){
+                CustomChild__c cc = cp.CustomChilds__r[0];
+                system.debug(cc);
+                cc.Status__c = 'active';
+                customChildUpdateList.add(cc);
+                
+            }
+            
+        }
+        if(!customParentUpdatedPendingOrDraft.isEmpty()){
+            List<CustomParent__c> cpList = [ Select id,status__c,(select status__c from CustomChilds__r) from CustomParent__c where id in: customParentUpdatedPendingOrDraft ]; 
+            for(CustomParent__c cp : cpList){
+                CustomChild__c cc = cp.CustomChilds__r[0];
+                system.debug(cc);
+                cc.Status__c = 'pending';
+                customChildUpdateList.add(cc);
+                
+            }
+        }
+        if(!customParentUpdatedWithdrawnOrReadytoWithdraw.isEmpty()){
+            List<CustomParent__c> cpList = [ Select id,status__c,(select status__c from CustomChilds__r) from CustomParent__c where id in: customParentUpdatedWithdrawnOrReadytoWithdraw ]; 
+            for(CustomParent__c cp : cpList){
+                CustomChild__c cc = cp.CustomChilds__r[0];
+                system.debug(cc);
+                cc.Status__c = 'Withdrawn';
+                customChildUpdateList.add(cc);
+                
+            }
+        }
+        if(!customChildUpdateList.isEmpty()){
+            update customChildUpdateList;
+        }
+        
+    }
+}
