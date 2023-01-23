@@ -8,7 +8,9 @@ public class CustomParentTriggerHandler {
             cc.CustomChildParent__c = cp.Id;
             customChildList.add(cc);
         }
-        insert customChildList;
+        if(!customChildList.isEmpty()){
+             Insert customChildList;
+        }
     }
     
     public static void customParentBeforeInsert( List<CustomParent__c> customParentList ) {
@@ -62,25 +64,25 @@ public class CustomParentTriggerHandler {
                     cc.FromDate__c = system.today();
                     cc.ToDate__c = cc.FromDate__c.addYears(3);
                 }
-                update customChildUpdateActive;
+                Update customChildUpdateActive;
             }
             if ( !customChildUpdateCompleted.isEmpty() ) {
                 for ( CustomChild__c cc : customChildUpdateCompleted ) {
                     cc.Status__c = 'active';
                 }
-                update customChildUpdateCompleted;
+                Update customChildUpdateCompleted;
             }
             if ( !customChildUpdateDraftOrPending.isEmpty() ) {
                 for ( CustomChild__c cc : customChildUpdateDraftOrPending ) {
                     cc.Status__c = 'pending';
                 }
-                update customChildUpdateDraftOrPending;
+                Update customChildUpdateDraftOrPending;
             }
             if ( !customChildUpdateWithdrawnOrReadyToWithdrawn.isEmpty() ) {
                 for ( CustomChild__c cc : customChildUpdateWithdrawnOrReadyToWithdrawn ) {
                     cc.Status__c = 'Withdrawn';
                 }
-                update customChildUpdateWithdrawnOrReadyToWithdrawn;
+                Update customChildUpdateWithdrawnOrReadyToWithdrawn;
             }    
         }    
     }
